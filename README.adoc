@@ -1,0 +1,66 @@
+= Bricks4j
+
+_A brick database in Neo4j._
+
+Besides having a whole catalog of a well-known brick company, the idea is to ask the database what one could build with a given set.
+
+== Data import
+
+Data comes from https://rebrickable.com/downloads/
+
+(not yet clean) import script
+
+```
+CREATE INDEX Inventory_Id FOR (i:Inventory) on (i.inventoryId);
+CREATE INDEX Part_Number FOR (p:Part) on (p.partNumber);
+CREATE INDEX PartGroup_InventoryIdAndPartNumber FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber);
+CREATE INDEX PartGroup_InventoryIdAndPartNumberColorIdIsSpare FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber, pg.colorId, pg.isSpare);
+CREATE INDEX Color_ColorId FOR (c:Color) on (c.colorId);
+CREATE INDEX Set_Number FOR (s:Set) on (s.number);
+
+// 16633
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///sets.csv' AS set
+CREATE (:Set{number: set.set_num, name: set.name, year: toInteger(set.year), numberOfParts: toInteger(set.num_parts)});
+
+// 28325
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventories.csv' AS inventory
+CREATE (i:Inventory{inventoryId: inventory.id});
+
+// 38428
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///parts.csv' AS part
+CREATE (p:Part{partNumber: part.part_num, name: part.name});
+
+// 187
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///colors.csv' AS color
+CREATE (:Color{colorId: color.id, name: color.name, rgb: color.rgb, transparent: CASE color.is_trans when 'f' then false else true end});
+
+// 884645
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
+CREATE (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end, colorId: inventory_parts.color_id});
+
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventories.csv' AS inventory
+MATCH (s:Set{number: inventory.set_num})
+MATCH (i:Inventory{inventoryId: inventory.id})
+MERGE (s)-[:DEFINED_BY]->(i);
+
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
+MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (i:Inventory{inventoryId: inventory_parts.inventory_id})
+CREATE (i)-[:NEEDS]->(pg);
+
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
+MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (c:Color{colorId: inventory_parts.color_id})
+CREATE (pg)-[:HAS_COLOR]->(c);
+
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
+MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (p:Part{partNumber: inventory_parts.part_num})
+CREATE (pg)<-[:IS_PART_OF{quantity: toInteger(inventory_parts.quantity)}]-(p);
+
+USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///parts.csv' AS part
+MATCH (p:Part{partNumber: part.part_num, name: part.name})
+MERGE (m:Material{material: part.part_material})
+MERGE (p)-[:MADE_OF]->(m);
+```
+
