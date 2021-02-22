@@ -7,54 +7,85 @@ Besides having a whole catalog of a well-known brick company, the idea is to ask
 == Data import
 
 Data comes from https://rebrickable.com/downloads/
+At the moment only
 
-(not yet clean) import script
+* sets
+* inventories
+* parts
+* colors
+* inventory_parts
 
-```
+are needed.
+Also have a look at the schema given on the page to get an impression of the data and the relationships in there.
+
+=== Clean up
+
+Yes, I copy my own script from here ;)
+
+[source,cypher]
+----
+MATCH (n) detach delete n;
+DROP INDEX Inventory_Id;
+DROP INDEX Part_Number;
+DROP INDEX Color_ColorId;
+DROP INDEX Set_Number;
+DROP INDEX PartGroup_InventoryIdAndPartNumber;
+DROP INDEX PartGroup_InventoryIdAndPartNumberColorIdIsSpare;
+----
+
+=== Indexes
+
+To get a better performance when creating the relationships, we create some indexes upfront.
+
+[source,cypher]
+----
 CREATE INDEX Inventory_Id FOR (i:Inventory) on (i.inventoryId);
 CREATE INDEX Part_Number FOR (p:Part) on (p.partNumber);
-CREATE INDEX PartGroup_InventoryIdAndPartNumber FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber);
-CREATE INDEX PartGroup_InventoryIdAndPartNumberColorIdIsSpare FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber, pg.colorId, pg.isSpare);
 CREATE INDEX Color_ColorId FOR (c:Color) on (c.colorId);
 CREATE INDEX Set_Number FOR (s:Set) on (s.number);
 
-// 16633
+// composite index only available in Neo4j Enterprise
+// btw. did you try Neo4j Desktop with built-in Neo4j Enterprise edition? https://neo4j.com/download/
+CREATE INDEX PartGroup_InventoryIdAndPartNumber FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber);
+CREATE INDEX PartGroup_InventoryIdAndPartNumberColorIdIsSpare FOR (pg:PartGroup) on (pg.inventoryId, pg.partNumber, pg.colorId, pg.isSpare);
+----
+
+=== Import script
+[source,cypher]
+----
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///sets.csv' AS set
 CREATE (:Set{number: set.set_num, name: set.name, year: toInteger(set.year), numberOfParts: toInteger(set.num_parts)});
 
-// 28325
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventories.csv' AS inventory
-CREATE (i:Inventory{inventoryId: inventory.id});
+CREATE (i:Inventory{inventoryId: toInteger(inventory.id)});
 
-// 38428
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///parts.csv' AS part
 CREATE (p:Part{partNumber: part.part_num, name: part.name});
 
-// 187
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///colors.csv' AS color
-CREATE (:Color{colorId: color.id, name: color.name, rgb: color.rgb, transparent: CASE color.is_trans when 'f' then false else true end});
+CREATE (:Color{colorId: toInteger(color.id), name: color.name, rgb: color.rgb, transparent: CASE color.is_trans when 'f' then false else true end});
 
-// 884645
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
-CREATE (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end, colorId: inventory_parts.color_id});
+CREATE (pg:PartGroup{inventoryId: toInteger(inventory_parts.inventory_id), partNumber: inventory_parts.part_num, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end, colorId: toInteger(inventory_parts.color_id)});
 
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventories.csv' AS inventory
 MATCH (s:Set{number: inventory.set_num})
-MATCH (i:Inventory{inventoryId: inventory.id})
+MATCH (i:Inventory{inventoryId: toInteger(inventory.id)})
 MERGE (s)-[:DEFINED_BY]->(i);
 
+// To get a unique node for the relationship creation later, we need to set colorId as a property.
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
-MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
-MATCH (i:Inventory{inventoryId: inventory_parts.inventory_id})
+MATCH (pg:PartGroup{inventoryId: toInteger(inventory_parts.inventory_id), partNumber: inventory_parts.part_num, colorId: toInteger(inventory_parts.color_id), isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (i:Inventory{inventoryId: toInteger(inventory_parts.inventory_id)})
 CREATE (i)-[:NEEDS]->(pg);
 
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
-MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
-MATCH (c:Color{colorId: inventory_parts.color_id})
+MATCH (pg:PartGroup{inventoryId: toInteger(inventory_parts.inventory_id), partNumber: inventory_parts.part_num, colorId: toInteger(inventory_parts.color_id), isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (c:Color{colorId: toInteger(inventory_parts.color_id)})
 CREATE (pg)-[:HAS_COLOR]->(c);
 
 USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///inventory_parts.csv' AS inventory_parts
-MATCH (pg:PartGroup{inventoryId: inventory_parts.inventory_id, partNumber: inventory_parts.part_num, colorId: inventory_parts.color_id, isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
+MATCH (pg:PartGroup{inventoryId: toInteger(inventory_parts.inventory_id), partNumber: inventory_parts.part_num, colorId: toInteger(inventory_parts.color_id), isSpare: CASE inventory_parts.is_spare when 'f' then false else true end})
 MATCH (p:Part{partNumber: inventory_parts.part_num})
 CREATE (pg)<-[:IS_PART_OF{quantity: toInteger(inventory_parts.quantity)}]-(p);
 
@@ -62,5 +93,32 @@ USING PERIODIC COMMIT 2000 LOAD CSV WITH HEADERS FROM 'file:///parts.csv' AS par
 MATCH (p:Part{partNumber: part.part_num, name: part.name})
 MERGE (m:Material{material: part.part_material})
 MERGE (p)-[:MADE_OF]->(m);
-```
+----
 
+=== To do
+
+* Part relationships (parent-child)
+* Minifigs (like Super Mario etc.)
+* Part categories
+* Themes
+
+== Getting started queries
+
+=== Verify description and parts defined by relationships
+
+Compare number of parts to the set description
+
+[source,cypher]
+----
+MATCH (s:Set)-[:DEFINED_BY]->(:Inventory)-[:NEEDS]->(pg:PartGroup)<-[r:IS_PART_OF]-(:Part) where s.name =~ ".* Dodge Charger" and NOT pg.isSpare return s.name, s.numberOfParts, sum(r.quantity);
+----
+
+== Next
+
+* Complete the import regarding part relationships.
+* Create custom inventory that contains parts to match against existing sets.
+** This will enable the functionality to determine how many sets can be built with your home inventory.
+* Try to calculate the missing parts between the custom inventory and the chosen set.
+* Define fallback part definitions that would enable building a model 100% even if not 100% of the defined parts in a set exist in the custom inventory.
+** Ignore colors
+** Physical replacement: e.g. 2x2 could be a replacement for a 1x4 brick
