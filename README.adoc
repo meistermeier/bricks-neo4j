@@ -113,6 +113,10 @@ Compare number of parts to the set description
 MATCH (s:Set)-[:DEFINED_BY]->(:Inventory)-[:NEEDS]->(pg:PartGroup)<-[r:IS_PART_OF]-(:Part) where s.name =~ ".* Dodge Charger" and NOT pg.isSpare return s.name, s.numberOfParts, sum(r.quantity);
 ----
 
+== GDS
+
+Here is an https://github.com/meistermeier/bricks4j/blob/main/gds.adoc[example] how to apply PageRank provided by the Neo4j GDS library on the `Part` nodes to find out which of them are the most used ones.
+
 == Next
 
 * Complete the import regarding part relationships.
