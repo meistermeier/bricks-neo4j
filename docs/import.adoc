@@ -1,0 +1,45 @@
+=== General
+
+Data comes from https://rebrickable.com/downloads/
+At the moment only
+
+* sets
+* inventories
+* parts
+* colors
+* inventory_parts
+* elements
+
+are needed.
+Also have a look at the schema given on the page to get an impression of the data and the relationships in there.
+
+=== Cypher
+
+==== Clean up
+
+[source,cypher]
+----
+include::cypher/clean_up.cypher[]
+----
+
+==== Indexes
+
+To get a better performance when creating the relationships, we create some indexes upfront.
+
+[source,cypher]
+----
+include::cypher/indexes.cypher[]
+----
+
+==== Import
+[source,cypher]
+----
+include::cypher/import.cypher[]
+----
+
+==== To do
+
+* Part relationships (parent-child)
+* Minifigs (like Super Mario etc.)
+* Part categories
+* Themes

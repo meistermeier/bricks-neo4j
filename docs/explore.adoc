@@ -1,0 +1,75 @@
+=== Verify description and parts defined by relationships
+
+Compare number of parts to the set description.
+
+[source,cypher]
+----
+MATCH (s:Set)-[:DEFINED_BY]->(:Inventory)-[:NEEDS]->(pg:PartGroup)<-[r:IS_PART_OF]-(:Part)
+WHERE s.name =~ ".* Dodge Charger" AND NOT pg.isSpare 
+RETURN s.name, s.numberOfParts, sum(r.quantity);
+----
+
+result
+
+|===
+| s.name | s.numberOfParts | sum(r.quantity)
+
+| "Dom’s Dodge Charger" | 1077 | 1077
+|===
+
+=== Spare parts of a set
+
+Quantity and part number of spare parts.
+
+[source,cypher]
+----
+MATCH (s:Set)-[:DEFINED_BY]->()-[:NEEDS]->(pg:PartGroup{isSpare:true})<-[pr:IS_PART_OF]-(:Part)
+WHERE s.number = "42088-1" 
+RETURN pr.quantity, pg.partNumber;
+----
+
+result
+
+|===
+| pr.quantity | pg.partNumber
+
+| 1 | "4274"
+| 1 | "32123b"
+| 1 | "6141"
+| 1 | "6141"
+| 1 | "54200"
+| 1 | "6141"
+| 1 | "58176"
+| 1 | "2780"
+|===
+
+=== Parts to elements
+
+It is important to understand that a `Part` defined in the `PartGroup` is not matching a specific "part number" in the manual.
+Those are more generic numbers that may be defined in various versions (like an _a_ or _b_ suffix).
+To match the real number given in the manual, we are using also the `Element` types.
+Those are mapping part numbers (logical number) to element ids (the physical thing, let's call them bricks).
+Since the physical parts are colored there are at least one element id for every color the part is available in.
+
+For a _Technic Bush 1/2 Smooth with Axle Hole Semi-Reduced_ (32123b) this would be:
+[source,cypher]
+----
+MATCH (e:Element)-[:HAS_COLOR]->(c:Color)
+WHERE e.partNumber = "32123b"
+RETURN e.partNumber, e.elementId, c.name;
+----
+
+result
+
+|===
+| e.partNumber | e.elementId | c.name
+
+| "32123b" | "4110050" | "Light Gray"
+| "32123b" | "4211573" | "Light Bluish Gray"
+| "32123b" | "6271167" | "Yellow"
+| "32123b" | "3212324" | "Yellow"
+| "32123b" | "6271165" | "Light Bluish Gray"
+|===
+
+This basically means that the bricks are interchangeable.
+Of course even better if there are two bricks for the same part number sharing the same color.
