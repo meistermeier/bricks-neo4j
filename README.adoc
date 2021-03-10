@@ -1,5 +1,0 @@
-= Bricks4j
-
-_A brick database in Neo4j._
-
-Besides having a whole catalog of a well-known brick company, the idea is to ask the database what one could build with a given set.
