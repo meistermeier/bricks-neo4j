@@ -1,0 +1,4 @@
+=== _20.03.3021_
+- Decided to create a log of the work to write down my thoughts.
+- First thought that makes it in here:
+I have to rethink the data model.

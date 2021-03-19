@@ -4,4 +4,10 @@ _A brick database in Neo4j._
 
 Besides having a whole catalog of a well-known brick company, the idea is to ask the database what one could build with a given set.
 
-A documentation of my process can be found at https://meistermeier.github.io/bricks4j
+A documentation of the process and some ideas can be found at https://blog.meier.cloud/bricks4j/
+
+IMPORTANT: There will be updates to the underlying data, so please check from time to time if the _import.cypher_ has changed.
+
+TIP: There is now a Dockerfile that prepares everything for you.
+After this you could start to play with the data.
+To get some ideas, head over to https://blog.meier.cloud/bricks4j/#_exploring_the_dataset.

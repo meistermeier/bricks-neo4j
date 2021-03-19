@@ -1,0 +1,29 @@
+For an easy start to play with the data, I recommend to use the Docker image from the docker folder.
+
+The first two steps are rather simple:
+[source,shell]
+.Build the image
+----
+docker build -t meistermeier/bricks4j . 
+----
+
+This creates you an image with some defaults like user/pw: neo4j/secret, the data to import and some import scripts.
+
+[source,shell]
+.Run the image
+----
+docker run -p7474:7474 -p7687:7687 <meistermeier/brick4j:latest | or a better name>
+----
+
+Start a container with the exposed browser(7474) and bolt(7687) ports to interact with the instance from your host machine.
+
+In the last step you call the _import.cypher_ script.
+
+[source,shell]
+.Run the import
+----
+docker exec -it <your container id> /var/lib/neo4j/import/import.sh
+----
+
+After this you could start to play with the data.
+To get some ideas, head over to <<explore>>.

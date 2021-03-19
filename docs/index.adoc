@@ -4,15 +4,25 @@ Gerrit Meier <meistermeier@gmail.com>
 :url-repo: https://github.com/meistermeier/bricks4j
 :toc:
 
+[[import]]
 == Data import
 include::import.adoc[]
 
+[[explore]]
 == Exploring the dataset
 include::explore.adoc[]
 
 // == GDS (WIP)
 // 
 // Here is an https://github.com/meistermeier/bricks4j/blob/main/gds.adoc[example] how to apply PageRank provided by the Neo4j GDS library on the `Part` nodes to find out which of them are the most used ones.
+
+[[try]]
+== Try it out
+include::try.adoc[]
+
+[[log]]
+== Log
+include::log.adoc[]
 
 == Next
 
