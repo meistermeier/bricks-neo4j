@@ -27,6 +27,8 @@ include::log.adoc[]
 == Next
 
 * Complete the import and information gathering around the missing elements.
+* Create an application around the data.
+Just read-only first.
 * Create custom inventory that contains parts to match against existing sets.
 ** This will enable the functionality to determine how many sets can be built with your home inventory.
 * Try to calculate the missing parts between the custom inventory and the chosen set.
