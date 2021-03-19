@@ -449,17 +449,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_data_import">Data import</a>
+<li><a href="#import">Data import</a>
 <ul class="sectlevel2">
 <li><a href="#_general">General</a></li>
 <li><a href="#_cypher">Cypher</a></li>
 </ul>
 </li>
-<li><a href="#_exploring_the_dataset">Exploring the dataset</a>
+<li><a href="#explore">Exploring the dataset</a>
 <ul class="sectlevel2">
 <li><a href="#_verify_description_and_parts_defined_by_relationships">Verify description and parts defined by relationships</a></li>
 <li><a href="#_spare_parts_of_a_set">Spare parts of a set</a></li>
 <li><a href="#_parts_to_elements">Parts to elements</a></li>
+</ul>
+</li>
+<li><a href="#try">Try it out</a></li>
+<li><a href="#log">Log</a>
+<ul class="sectlevel2">
+<li><a href="#_20_03_3021"><em>20.03.3021</em></a></li>
 </ul>
 </li>
 <li><a href="#_next">Next</a></li>
@@ -468,7 +474,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_data_import">Data import</h2>
+<h2 id="import">Data import</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_general">General</h3>
@@ -623,7 +629,7 @@ MERGE (p)-[:MADE_OF]-&gt;(m);</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exploring_the_dataset">Exploring the dataset</h2>
+<h2 id="explore">Exploring the dataset</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_verify_description_and_parts_defined_by_relationships">Verify description and parts defined by relationships</h3>
@@ -795,6 +801,67 @@ Of course even better if there are two bricks for the same part number sharing t
 </div>
 </div>
 <div class="sect1">
+<h2 id="try">Try it out</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For an easy start to play with the data, I recommend to use the Docker image from the docker folder.</p>
+</div>
+<div class="paragraph">
+<p>The first two steps are rather simple:</p>
+</div>
+<div class="listingblock">
+<div class="title">Build the image</div>
+<div class="content">
+<pre class="highlight"><code class="language-shell" data-lang="shell">docker build -t meistermeier/bricks4j .</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates you an image with some defaults like user/pw: neo4j/secret, the data to import and some import scripts.</p>
+</div>
+<div class="listingblock">
+<div class="title">Run the image</div>
+<div class="content">
+<pre class="highlight"><code class="language-shell" data-lang="shell">docker run -p7474:7474 -p7687:7687 &lt;meistermeier/brick4j:latest | or a better name&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Start a container with the exposed browser(7474) and bolt(7687) ports to interact with the instance from your host machine.</p>
+</div>
+<div class="paragraph">
+<p>In the last step you call the <em>import.cypher</em> script.</p>
+</div>
+<div class="listingblock">
+<div class="title">Run the import</div>
+<div class="content">
+<pre class="highlight"><code class="language-shell" data-lang="shell">docker exec -it &lt;your container id&gt; /var/lib/neo4j/import/import.sh</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After this you could start to play with the data.
+To get some ideas, head over to <a href="#explore">Exploring the dataset</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="log">Log</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_20_03_3021"><em>20.03.3021</em></h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Decided to create a log of the work to write down my thoughts.</p>
+</li>
+<li>
+<p>First thought that makes it in here:
+I have to rethink the data model.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_next">Next</h2>
 <div class="sectionbody">
 <div class="ulist">
@@ -835,7 +902,7 @@ Of course even better if there are two bricks for the same part number sharing t
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-10 21:35:23 UTC
+Last updated 2021-03-19 23:33:57 UTC
 </div>
 </div>
 </body>
