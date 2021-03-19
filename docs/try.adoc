@@ -4,7 +4,7 @@ The first two steps are rather simple:
 [source,shell]
 .Build the image
 ----
-docker build -t meistermeier/bricks4j . 
+docker build -t <meistermeier/brick4j:latest | or a better name> . 
 ----
 
 This creates you an image with some defaults like user/pw: neo4j/secret, the data to import and some import scripts.
