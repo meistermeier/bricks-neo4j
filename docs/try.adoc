@@ -1,4 +1,4 @@
-For an easy start to play with the data, I recommend to use the Docker image from the docker folder.
+For an easy start to play with the data, I recommend to use the Docker image from the https://github.com/meistermeier/bricks4j/tree/main/docker[docker folder of the repository].
 
 The first two steps are rather simple:
 [source,shell]
