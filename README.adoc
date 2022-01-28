@@ -1,4 +1,4 @@
-= Bricks4j
+= Bricks-Neo4j
 
 _A brick database in Neo4j._
 
